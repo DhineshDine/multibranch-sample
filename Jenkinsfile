@@ -10,7 +10,7 @@ pipeline {
     stage('Deploy to Docker'){
 
           steps{
-withCredentials([string(credentialsId: 'Docker_pwd', variable: 'DOCKER')]) {
+withCredentials([string(credentialsId: 'DOCKER_PWD', variable: 'DOCKER')]) {
 
         bat 'docker login -u dhineshdine -p ${DOCKER}'
         bat 'docker build -t dhineshdine/multibranch-sample:latest'
