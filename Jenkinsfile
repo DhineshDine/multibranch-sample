@@ -12,6 +12,12 @@ environment {
         bat ' npm install '
       }
     }
+    stage ('Clean Previous Deployment'){
+      steps{
+        bat "docker stop ${env.DOCKER_CONTAINER_NAME} || true"
+        bat "docker rm  ${env.DOCKER_CONTAINER_NAME} || true"
+      }
+    }
     stage('Build an Docker Image'){
 
           steps{
@@ -26,7 +32,7 @@ withCredentials([string(credentialsId: 'DOCKER_PWD', variable: 'DOCKER')]) {
     stage('Deploy to Hub'){
       steps{
       echo "Deploying to Hub"
-      bat "docker push dhineshdine ${env.DOCKER_IMAGE_NAME}"
+      bat "docker push dhineshdine/${env.DOCKER_IMAGE_NAME}"
       
     }
     }
