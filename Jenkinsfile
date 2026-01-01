@@ -32,7 +32,7 @@ withCredentials([string(credentialsId: 'DOCKER_PWD', variable: 'DOCKER')]) {
     stage('Deploy to Hub'){
       steps{
       echo "Deploying to Hub"
-      bat "docker push dhineshdine/${env.DOCKER_IMAGE_NAME}"
+      bat "docker push ${env.DOCKER_IMAGE_NAME}"
       
     }
     }
