@@ -13,7 +13,7 @@ pipeline {
 withCredentials([string(credentialsId: 'DOCKER_PWD', variable: 'DOCKER')]) {
 
         bat "docker login -u dhineshdine -p ${DOCKER}"
-        bat 'docker build -t dhineshdine/multibranch-sample:latest'
+        bat 'docker build -t dhineshdine/multibranch-sample:latest .'
         bat 'docker push dhineshdine/multibranch-sample:latest'
 
         echo "Deployed to Docker Sucessfully"
