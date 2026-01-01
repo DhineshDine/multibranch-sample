@@ -14,8 +14,8 @@ environment {
     }
     stage ('Clean Previous Deployment'){
       steps{
-        bat "docker stop ${env.DOCKER_CONTAINER_NAME} || true"
-        bat "docker rm  ${env.DOCKER_CONTAINER_NAME} || true"
+        bat "docker stop ${env.DOCKER_CONTAINER_NAME} || exit 0"
+        bat "docker rm  ${env.DOCKER_CONTAINER_NAME} || exit 0"
       }
     }
     stage('Build an Docker Image'){
