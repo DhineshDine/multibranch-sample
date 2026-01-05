@@ -1,0 +1,26 @@
+# Corrected YAML: Uses the mandatory v1 structure
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: strange-ingress
+  namespace: strange
+spec:
+  # Optional but highly recommended: define a default backend for 404s
+  # defaultBackend:
+  #   service:
+  #     name: strange-service
+  #     port:
+  #       number: 80
+  rules:
+  - host: strange.shows.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        # The 'backend' block must be *nested* inside the 'path' block.
+        backend:
+          # In v1, serviceName and servicePort are replaced by this structure.
+          service:
+            name: strange-service # Replaces serviceName
+            port:
+              number: 80 # Replaces servicePort
