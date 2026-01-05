@@ -1,23 +1,47 @@
 pipeline {
   agent any 
-
+environment {
+  DOCKER_IMAGE_NAME = "dhineshdine/multibranch-sample:latest"
+  DOCKER_CONTAINER_NAME = "multibranch-cont"
+  HOST_PORT = 9000
+  CONTAINER_PORT = 80
+}
   stages {
     stage('build') {
       steps{
         bat ' npm install '
       }
     }
-    stage('Deploy to Docker'){
+    stage ('Clean Previous Deployment'){
+      steps{
+        bat "docker stop ${env.DOCKER_CONTAINER_NAME} || exit 0"
+        bat "docker rm  ${env.DOCKER_CONTAINER_NAME} || exit 0"
+      }
+    }
+    stage('Build an Docker Image'){
 
           steps{
-withCredentials([string(credentialsId: 'Docker_pwd', variable: 'DOCKER')]) {
+withCredentials([string(credentialsId: 'DOCKER_PWD', variable: 'DOCKER')]) {
 
-        bat 'docker login -u dhineshdine -p ${DOCKER}'
-        bat 'docker build -t dhineshdine/multibranch-sample:latest'
-        bat 'docker push dhineshdine/multibranch-sample:latest'
-
-        echo "Deployed to Docker Sucessfully"
+        bat "docker login -u dhineshdine -p ${DOCKER}"
+        bat "docker build -t ${env.DOCKER_IMAGE_NAME} ."
         }
+      }
+    }
+
+    stage('Deploy to Hub'){
+      steps{
+      echo "Deploying to Hub"
+      bat "docker push ${env.DOCKER_IMAGE_NAME}"
+      
+    }
+    }
+
+    stage('Run the Container'){
+      steps{
+        echo "Starting a new Container From ${env.DOCKER_IMAGE_NAME}"
+        bat "docker run -d -p ${env.HOST_PORT}:${env.CONTAINER_PORT} --name ${env.DOCKER_CONTAINER_NAME} ${env.DOCKER_IMAGE_NAME}"
+        echo "Deployed container on ${env.HOST_PORT}"
       }
     }
   }
