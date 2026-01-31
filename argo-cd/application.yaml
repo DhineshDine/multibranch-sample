@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: my-app-prod
+  namespace: argocd # This is where ArgoCD is installed
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/DhineshDine/multibranch-sample.git'
+    targetRevision: HEAD
+    path: 'argocd/manifests' # The sub-folder containing your k8s files
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: my-app-ns # The namespace where your app will live
+  syncPolicy:
+    automated:
+      # This enables the "Auto" in Auto-Sync
+      prune: true # Deletes resources if you delete them from Git
+      selfHeal: true # Re-deploys if someone manually changes things in k8s
+    syncOptions:
+    - CreateNamespace=true # Creates 'my-app-ns' if it doesn't exist
