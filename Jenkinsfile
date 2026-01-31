@@ -6,7 +6,7 @@ pipeline {
         
         GIT_REPO_URL = "https://github.com/DhineshDine/multibranch-sample.git"
         // Ensure this path is exactly as it appears in your GitHub repo
-        MANIFEST_FILE = "argocd/manifests/deployment.yaml"
+        MANIFEST_FILE = "argo-cd/manifests/deployment.yaml"
     }
     
     stages {
@@ -45,8 +45,8 @@ pipeline {
                             cd temp-repo
 
                             :: 3. Identify the user (Fixes identity error)
-                            git config user.email "jenkins-bot@example.com"
-                            git config user.name "Jenkins Automation"
+                            git config user.email "dhineshdine18@example.com"
+                            git config user.name "DhineshDine"
 
                             :: 4. Update the image (Using the variable defined in environment)
                             :: Note: We use %MANIFEST_FILE% because we are inside the bat shell
