@@ -28,34 +28,35 @@ pipeline {
             }
         }
 
-        stage('Update GitOps Manifests') {
-            steps {
-                // Use Username/Password credentials for Git push access
-            // Ensure 'git-hub' matches the ID you created in Jenkins Credentials Provider
-withCredentials([usernamePassword(credentialsId: 'GitHub-UnameWithPass', 
-                 passwordVariable: 'GIT_PWD', 
-                 usernameVariable: 'GIT_USR')]) {
-    script {
-        // We use the variables defined above (GIT_USR and GIT_PWD)
-        def authRepoUrl = GIT_REPO_URL.replace("https://", "https://${GIT_USR}:${GIT_PWD}@")
-        
-        bat """
-            @echo off
-            :: Now we use the authenticated URL to clone and push
-            if exist temp-repo rmdir /s /q temp-repo
-            git clone ${authRepoUrl} temp-repo
-            cd temp-repo
-            
-            :: ... perform your file updates here ...
+       stage('Update GitOps Manifests') {
+    steps {
+        // Use the ID of your 'Username with password' credential
+        withCredentials([gitUsernamePassword(credentialsId: 'GitHub-UnameWithPass', 
+                                             gitToolName: 'Default')]) {
+            script {
+                bat """
+                    @echo off
+                    :: 1. Clean up and Clone
+                    if exist temp-repo rmdir /s /q temp-repo
+                    git clone ${GIT_REPO_URL} temp-repo
+                    cd temp-repo
 
-            git add .
-            git commit -m "chore: update via jenkins [skip ci]"
-            git push ${authRepoUrl} main
-        """
-    }
-}
+                    :: 2. Identify the Jenkins Bot (Fixes 'Author identity unknown')
+                    git config user.email "jenkins-bot@example.com"
+                    git config user.name "Jenkins Automation"
+
+                    :: 3. Update the YAML file
+                    powershell -Command "(Get-Content argocd/manifests/deployment.yaml) -replace 'image:.*', 'image: ${env.DOCKER_IMAGE_NAME}' | Set-Content argocd/manifests/deployment.yaml"
+
+                    :: 4. Commit and Push
+                    git add .
+                    git commit -m "image update: version ${BUILD_NUMBER} [skip ci]"
+                    git push origin main
+                """
             }
         }
+    }
+}
     }
     
     post {
