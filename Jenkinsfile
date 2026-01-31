@@ -6,7 +6,7 @@ pipeline {
         DOCKER_IMAGE_NAME = "${DOCKER_IMAGE_BASE}:${BUILD_NUMBER}"
         
         // 2. Git Manifest Details
-        GIT_REPO_URL = "https://github.com/dhineshdine/your-repo-name.git"
+        GIT_REPO_URL = "https://github.com/DhineshDine/multibranch-sample.git"
         MANIFEST_PATH = "argocd/manifests/deployment.yaml"
     }
     
