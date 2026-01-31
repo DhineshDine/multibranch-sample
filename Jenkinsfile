@@ -32,7 +32,7 @@ pipeline {
             steps {
                 // Use Username/Password credentials for Git push access
             // Ensure 'git-hub' matches the ID you created in Jenkins Credentials Provider
-withCredentials([usernamePassword(credentialsId: 'git-hub', 
+withCredentials([usernamePassword(credentialsId: 'GitHub-UnameWithPass', 
                  passwordVariable: 'GIT_PWD', 
                  usernameVariable: 'GIT_USR')]) {
     script {
