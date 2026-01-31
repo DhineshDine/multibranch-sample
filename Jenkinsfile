@@ -31,9 +31,8 @@ pipeline {
         stage('Update GitOps Manifests') {
             steps {
                 // Use Username/Password credentials for Git push access
-                withCredentials([usernamePassword(credentialsId: 'github-creds', 
-                                 passwordVariable: 'GIT_PASSWORD', 
-                                 usernameVariable: 'GIT_USERNAME')]) {
+               withCredentials([string(credentialsId: 'git-hub', variable: 'Git_hub')]) 
+                {
                     script {
                         // Create an authenticated URL for the push
                         def authRepoUrl = GIT_REPO_URL.replace("https://", "https://${GIT_USERNAME}:${GIT_PASSWORD}@")
