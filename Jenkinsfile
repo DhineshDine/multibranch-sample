@@ -32,36 +32,37 @@ pipeline {
                                  passwordVariable: 'GIT_PWD', 
                                  usernameVariable: 'GIT_USR')]) {
                     script {
-                        // We build the URL here, but we will use it carefully
-                        def authRepoUrl = GIT_REPO_URL.replace("https://", "https://${GIT_USR}:${GIT_PWD}@")
-                        
                         bat """
                             @echo off
-                            :: 1. Clean and Clone
-                            if exist temp-repo rmdir /s /q temp-repo
-                            git clone ${authRepoUrl} temp-repo
+                            :: 1. Build the URL inside the shell to avoid Groovy formatting issues
+                            set AUTH_URL=https://%GIT_USR%:%GIT_PWD%@github.com/DhineshDine/multibranch-sample.git
                             
-                            :: 2. Enter the repo
+                            :: 2. Clean and Clone
+                            if exist temp-repo rmdir /s /q temp-repo
+                            git clone %AUTH_URL% temp-repo
+                            
+                            :: 3. Enter the repo
                             cd temp-repo
+                            if %ERRORLEVEL% neq 0 (echo "Clone failed" && exit 1)
 
-                            :: 3. Identify the user (Fixes identity error)
+                            :: 4. Identity config (Required for Windows)
                             git config user.email "dhineshdine18@example.com"
                             git config user.name "DhineshDine"
 
-                            :: 4. Update the image (Using the variable defined in environment)
-                            :: Note: We use %MANIFEST_FILE% because we are inside the bat shell
-                            powershell -Command "(Get-Content %MANIFEST_FILE%) -replace 'image:.*', 'image: ${env.DOCKER_IMAGE_NAME}' | Set-Content %MANIFEST_FILE%"
+                            :: 5. Update image using PowerShell
+                            :: Note: I used %MANIFEST_FILE% from your environment block
+                            powershell -Command "(Get-Content %MANIFEST_FILE%) -replace 'image:.*', 'image: %DOCKER_IMAGE_NAME%' | Set-Content %MANIFEST_FILE%"
                             
-                            :: 5. Push changes
+                            :: 6. Commit and Push
                             git add .
-                            git commit -m "image update: version ${BUILD_NUMBER} [skip ci]"
+                            git commit -m "image update: version %BUILD_NUMBER% [skip ci]"
                             git push origin main
                         """
                     }
                 }
             }
         }
-    }
+            }
     
     post {
         always {

@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: 'https://github.com/DhineshDine/multibranch-sample.git'
     targetRevision: HEAD
-    path: 'argocd/manifests' # The sub-folder containing your k8s files
+    path: 'argo-cd/manifests' # The sub-folder containing your k8s files
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: my-app-ns # The namespace where your app will live
