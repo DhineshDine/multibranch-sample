@@ -27,42 +27,32 @@ pipeline {
             }
         }
 
-        stage('Update GitOps Manifests') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'GitHub-UnameWithPass', 
-                                 passwordVariable: 'GIT_PWD', 
-                                 usernameVariable: 'GIT_USR')]) {
-                    script {
-                        // Use triple single-quotes ''' to avoid Groovy string interpolation issues with passwords
-                        bat '''
-                            @echo off
-                            :: 1. Build the URL inside the shell using environment variables
-                            set "AUTH_URL=https://%GIT_USR%:%GIT_PWD%@github.com/DhineshDine/multibranch-sample.git"
-                            
-                            :: 2. Clean and Clone
-                            if exist temp-repo rmdir /s /q temp-repo
-                            git clone "%AUTH_URL%" temp-repo
-                            
-                            :: 3. Enter the repo and check for success
-                            if not exist temp-repo (echo "Clone failed" && exit 1)
-                            cd temp-repo
+       stage('Update GitOps Manifests') {
+    steps {
+        dir('temp-repo') {
+            checkout([
+                $class: 'GitSCM',
+                branches: [[name: '*/main']],
+                userRemoteConfigs: [[
+                    url: 'https://github.com/DhineshDine/multibranch-sample.git',
+                    credentialsId: 'GitHub-UnameWithPass'
+                ]]
+            ])
 
-                            :: 4. Identity config
-                            git config user.email "dhineshdine18@example.com"
-                            git config user.name "DhineshDine"
+            bat """
+                git config user.email "dhineshdine18@example.com"
+                git config user.name "DhineshDine"
 
-                            :: 5. Update image using PowerShell
-                            powershell -Command "(Get-Content %MANIFEST_FILE%) -replace 'image:.*', 'image: %DOCKER_IMAGE_NAME%' | Set-Content %MANIFEST_FILE%"
-                            
-                            :: 6. Commit and Push
-                            git add .
-                            git commit -m "image update: version %BUILD_NUMBER% [skip ci]"
-                            git push origin main
-                        '''
-                    }
-                }
-            }
-        } 
+                powershell -Command "(Get-Content ${MANIFEST_FILE}) -replace 'image:.*', 'image: ${DOCKER_IMAGE_NAME}' | Set-Content ${MANIFEST_FILE}"
+
+                git add .
+                git commit -m "image update: version ${BUILD_NUMBER} [skip ci]"
+                git push origin main
+            """
+        }
+    }
+}
+
     } // End of stages
     
     post {
