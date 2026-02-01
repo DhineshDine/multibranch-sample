@@ -32,7 +32,7 @@ pipeline {
                                  passwordVariable: 'GIT_PWD', 
                                  usernameVariable: 'GIT_USR')]) {
                     script {
-                        bat '''
+                        bat """
                             @echo off
                             :: 1. Build the URL inside the shell to avoid Groovy formatting issues
                             set "AUTH_URL=https://%GIT_USR%:%GIT_PWD%@github.com/DhineshDine/multibranch-sample.git"
@@ -57,7 +57,7 @@ pipeline {
                             git add .
                             git commit -m "image update: version %BUILD_NUMBER% [skip ci]"
                             git push origin main
-                        '''
+                        """
                     }
                 }
             }
