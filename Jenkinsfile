@@ -73,7 +73,9 @@ pipeline {
                     git diff --quiet || git commit -m "image update: version %BUILD_TAG_VERSION% [skip ci]"
 
                     set GIT_TERMINAL_PROMPT=0
-                    git push https://%GITHUB_PAT%@github.com/DhineshDine/multibranch-sample.git main
+                    git remote set-url origin https://%GITHUB_PAT%@github.com/DhineshDine/multibranch-sample.git
+
+                    git push origin main
                     """
                 }
             }
