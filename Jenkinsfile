@@ -62,7 +62,7 @@ pipeline {
 
         stage('Commit & Push Manifest') {
             steps {
-                withCredentials([string(credentialsId: 'github-access', variable: 'GITHUB_PAT')]) {
+                withCredentials([string(credentialsId: 'git-hub', variable: 'GITHUB_PAT')]) {
                     bat """
                     cd %TEMP_REPO%
 
