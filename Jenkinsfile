@@ -28,33 +28,37 @@ pipeline {
             }
         }
 
-        stage('Update GitOps Manifest') {
-            steps {
-                withCredentials([
-                    string(credentialsId: 'git-hub', variable: 'GITHUB_TOKEN')
-                ]) {
-                    bat """
-                    if exist temp-repo rmdir /s /q temp-repo
+       stage('Update GitOps Manifest') {
+    steps {
+        withCredentials([
+            string(credentialsId: 'git-hub', variable: 'GITHUB_TOKEN')
+        ]) {
+            bat """
+            if exist temp-repo rmdir /s /q temp-repo
 
-                    git clone https://%GITHUB_TOKEN%@github.com/%GIT_REPO% temp-repo
-                    cd temp-repo
+            git clone https://%GITHUB_TOKEN%@github.com/%GIT_REPO% temp-repo
+            cd temp-repo
 
-                    git checkout main
+            git checkout main
 
-                    git config user.email "dhineshdine18@example.com"
-                    git config user.name "DhineshDine"
+            git config user.email "dhineshdine18@example.com"
+            git config user.name "DhineshDine"
 
-                    powershell -Command "(Get-Content %MANIFEST%) -replace 'image:.*', 'image: %IMAGE_NAME%' | Set-Content %MANIFEST%"
+            powershell -Command "(Get-Content %MANIFEST%) -replace 'image:.*', 'image: %IMAGE_NAME%' | Set-Content %MANIFEST%"
 
-                    git add %MANIFEST%
+            git add %MANIFEST%
 
-                    git diff --cached --quiet || git commit -m "Update image to %IMAGE_NAME% [skip ci]"
+            git diff --cached --quiet || git commit -m "Update image to %IMAGE_NAME% [skip ci]"
 
-                    git push origin main
-                    """
-                }
-            }
+            git remote remove origin
+            git remote add origin https://%GITHUB_TOKEN%@github.com/%GIT_REPO%
+
+            git push origin main
+            """
         }
+    }
+}
+
     }
 
     post {
