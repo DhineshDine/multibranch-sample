@@ -31,7 +31,7 @@ pipeline {
        stage('Update GitOps Manifest') {
     steps {
         withCredentials([
-            string(credentialsId: 'git-hub', variable: 'GITHUB_TOKEN')
+            string(credentialsId: 'GIT-HUB-2', variable: 'GITHUB_TOKEN')
         ]) {
             bat """
             if exist temp-repo rmdir /s /q temp-repo
