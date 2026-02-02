@@ -1,20 +1,37 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: multibranch-sample
-  namespace: default
+  name: my-app
+  namespace: strange
+  labels:
+    app: my-strange-app
 spec:
-  replicas: 1
+  replicas: 5
   selector:
     matchLabels:
-      app: multibranch-sample
+      app: my-strange-app
   template:
     metadata:
       labels:
-        app: multibranch-sample
+        app: my-strange-app
     spec:
       containers:
-        - name: app
-          image: dhineshdine/multibranch-sample:48
-          ports:
-            - containerPort: 80
+      - name: strange
+        image: dhineshdine/multibranch-sample
+        ports:
+        - containerPort: 80
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: strange-service
+  namespace: strange
+spec:
+  selector:
+    app: my-strange-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: NodePort
