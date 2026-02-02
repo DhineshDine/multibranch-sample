@@ -62,22 +62,18 @@ pipeline {
 
         stage('Commit & Push Manifest') {
             steps {
-                withCredentials([string(credentialsId: 'git-hub', variable: 'GITHUB_PAT')]) {
-                    bat """
-                    cd %TEMP_REPO%
+               withCredentials([
+    string(credentialsId: 'git-hub', variable: 'GITHUB_TOKEN')]) {
+    bat """
+    git config user.email "dhineshdine18@example.com"
+    git config user.name "DhineshDine"
 
-                    git config user.email "dhineshdine18@example.com"
-                    git config user.name "DhineshDine"
+    git remote set-url origin https://%GITHUB_TOKEN%@github.com/DhineshDine/multibranch-sample.git
 
-                    git diff --quiet || git add %MANIFEST_PATH%
-                    git diff --quiet || git commit -m "image update: version %BUILD_TAG_VERSION% [skip ci]"
+    git push origin main
+    """
+}
 
-                    set GIT_TERMINAL_PROMPT=0
-                    git remote set-url origin https://%GITHUB_PAT%@github.com/DhineshDine/multibranch-sample.git
-
-                    git push origin main
-                    """
-                }
             }
         }
     }
