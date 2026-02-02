@@ -30,7 +30,7 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: 'DOCKER_PWD',
+                    credentialsId: 'DockerUnamePass',
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
@@ -62,7 +62,7 @@ pipeline {
 
         stage('Commit & Push Manifest') {
             steps {
-                withCredentials([string(credentialsId: 'git-hub', variable: 'GITHUB_PAT')]) {
+                withCredentials([string(credentialsId: 'github-access', variable: 'GITHUB_PAT')]) {
                     bat """
                     cd %TEMP_REPO%
 
