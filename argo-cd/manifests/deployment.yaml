@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: strange
-        image: dhineshdine/multibranch-sample
+        image: dhineshdine/multibranch-sample:49
         ports:
         - containerPort: 80
 ---
