@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
         - name: app
-          image: dhineshdine/multibranch-sample:1
+          image: dhineshdine/multibranch-sample:48
           ports:
             - containerPort: 80
