@@ -21,33 +21,45 @@ pipeline {
                 }
             }
         }
-        stage('Update GitOps Manifests') {
-            steps {
-                dir('temp-repo') {
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: [[name: '*/main']],
-                        userRemoteConfigs: [[
-                            url: GIT_REPO_URL,
-                            credentialsId: 'GitHub-UnameWithPass'
-                        ]],
-                        extensions: [
-                            [$class: 'LocalBranch', localBranch: 'main']
-                        ]
-                    ])
-                    bat """
-                    git status
-                    git branch
-                    git config user.email "dhineshdine18@example.com"
-                    git config user.name "DhineshDine"
-                    powershell -Command "(Get-Content ${MANIFEST_FILE}) -replace 'image:.*', 'image: ${DOCKER_IMAGE_NAME}' | Set-Content ${MANIFEST_FILE}"
-                    git add ${MANIFEST_FILE}
-                    git commit -m "image update: version ${BUILD_NUMBER} [skip ci]"
-                    git push origin main
-                    """
-                }
-            }
+       stage('Update GitOps Manifests') {
+    options {
+        timeout(time: 3, unit: 'MINUTES')
+    }
+    steps {
+        dir('temp-repo') {
+            checkout([
+                $class: 'GitSCM',
+                branches: [[name: '*/main']],
+                userRemoteConfigs: [[
+                    url: GIT_REPO_URL,
+                    credentialsId: 'GitHub-UnameWithPass'
+                ]],
+                extensions: [
+                    [$class: 'LocalBranch', localBranch: 'main']
+                ]
+            ])
+
+            bat """
+            set GIT_TERMINAL_PROMPT=0
+
+            git status
+            git branch
+
+            git config user.email "dhineshdine18@example.com"
+            git config user.name "DhineshDine"
+
+            powershell -Command "(Get-Content ${MANIFEST_FILE}) -replace 'image:.*', 'image: ${DOCKER_IMAGE_NAME}' | Set-Content ${MANIFEST_FILE}"
+
+            git diff --quiet && echo No change in manifest && exit 0
+
+            git add ${MANIFEST_FILE}
+            git commit -m "image update: version ${BUILD_NUMBER} [skip ci]"
+            git push origin main
+            """
         }
+    }
+}
+
     }
     post {
         always {
