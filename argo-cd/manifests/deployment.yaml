@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: multibranch-sample
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: multibranch-sample
+  template:
+    metadata:
+      labels:
+        app: multibranch-sample
+    spec:
+      containers:
+        - name: app
+          image: dhineshdine/multibranch-sample:1
+          ports:
+            - containerPort: 80
