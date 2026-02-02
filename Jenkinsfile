@@ -2,81 +2,79 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE_BASE = "dhineshdine/multibranch-sample"
-        DOCKER_IMAGE_NAME = "${DOCKER_IMAGE_BASE}:${BUILD_NUMBER}"
-        GIT_REPO_URL = "https://github.com/DhineshDine/multibranch-sample.git"
-        MANIFEST_FILE = "argo-cd/manifests/deployment.yaml"
+        IMAGE_NAME = "dhineshdine/multibranch-sample"
+        MANIFEST_PATH = "argo-cd/manifests/deployment.yaml"
+        TEMP_REPO = "temp-repo"
+        GIT_REPO = "https://github.com/DhineshDine/multibranch-sample.git"
     }
 
     stages {
 
-        stage('Build App') {
+        stage('Checkout Source') {
             steps {
-                bat 'npm install'
+                checkout scm
             }
         }
 
-        stage('Build & Push Docker Image') {
+        stage('Build Docker Image') {
             steps {
-                withCredentials([
-                    string(credentialsId: 'DOCKER_PWD', variable: 'DOCKER_PWD')
-                ]) {
+                script {
+                    env.BUILD_TAG_VERSION = env.BUILD_NUMBER
+                }
+                bat """
+                docker build -t %IMAGE_NAME%:%BUILD_TAG_VERSION% .
+                """
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
                     bat """
-                    echo %DOCKER_PWD% | docker login -u dhineshdine --password-stdin
-                    docker build -t %DOCKER_IMAGE_NAME% .
-                    docker push %DOCKER_IMAGE_NAME%
+                    echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin
+                    docker push %IMAGE_NAME%:%BUILD_TAG_VERSION%
                     """
                 }
             }
         }
 
-        stage('Update GitOps Manifests') {
-            options {
-                timeout(time: 3, unit: 'MINUTES')
-            }
-
+        stage('Clone GitOps Repo') {
             steps {
-                dir('temp-repo') {
+                bat """
+                if exist %TEMP_REPO% rmdir /s /q %TEMP_REPO%
+                git clone %GIT_REPO% %TEMP_REPO%
+                """
+            }
+        }
 
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: [[name: '*/main']],
-                        userRemoteConfigs: [[
-                            url: GIT_REPO_URL,
-                            credentialsId: 'GitHub-UnameWithPass'
-                        ]],
-                        extensions: [
-                            [$class: 'LocalBranch', localBranch: 'main']
-                        ]
-                    ])
+        stage('Update Kubernetes Manifest') {
+            steps {
+                bat """
+                cd %TEMP_REPO%
+                powershell -Command "(Get-Content %MANIFEST_PATH%) -replace 'image:.*', 'image: %IMAGE_NAME%:%BUILD_TAG_VERSION%' | Set-Content %MANIFEST_PATH%"
+                """
+            }
+        }
 
-                    withCredentials([
-                        usernamePassword(
-                            credentialsId: 'GitHub-UnameWithPass',
-                            usernameVariable: 'GIT_USER',
-                            passwordVariable: 'GIT_PASS'
-                        )
-                    ]) {
-                        bat """
-                        set GIT_TERMINAL_PROMPT=0
+        stage('Commit & Push Manifest') {
+            steps {
+                withCredentials([string(credentialsId: 'github-pat', variable: 'GITHUB_PAT')]) {
+                    bat """
+                    cd %TEMP_REPO%
 
-                        git status
-                        git branch
+                    git config user.email "dhineshdine18@example.com"
+                    git config user.name "DhineshDine"
 
-                        git config user.email "dhineshdine18@example.com"
-                        git config user.name "DhineshDine"
+                    git diff --quiet || git add %MANIFEST_PATH%
+                    git diff --quiet || git commit -m "image update: version %BUILD_TAG_VERSION% [skip ci]"
 
-                        powershell -Command "(Get-Content ${MANIFEST_FILE}) -replace 'image:.*', 'image: ${DOCKER_IMAGE_NAME}' | Set-Content ${MANIFEST_FILE}"
-
-                        git diff --quiet && echo No change in manifest && exit 0
-
-                        git add ${MANIFEST_FILE}
-                        git commit -m "image update: version ${BUILD_NUMBER} [skip ci]"
-
-                        git remote set-url origin https://%GIT_USER%:%GIT_PASS%@github.com/DhineshDine/multibranch-sample.git
-                        git push origin main
-                        """
-                    }
+                    set GIT_TERMINAL_PROMPT=0
+                    git push https://%GITHUB_PAT%@github.com/DhineshDine/multibranch-sample.git main
+                    """
                 }
             }
         }
@@ -84,7 +82,15 @@ pipeline {
 
     post {
         always {
-            bat 'if exist temp-repo rmdir /s /q temp-repo'
+            bat """
+            if exist %TEMP_REPO% rmdir /s /q %TEMP_REPO%
+            """
+        }
+        success {
+            echo "✅ CI completed — Argo CD will sync automatically"
+        }
+        failure {
+            echo "❌ Pipeline failed — check logs"
         }
     }
 }
